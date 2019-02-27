@@ -1,0 +1,10 @@
+[package]
+name = "pushover"
+version = "0.1.0"
+authors = ["Richo Healey <richo@psych0tik.net>"]
+edition = "2018"
+
+[dependencies]
+failure = "0.1.5"
+reqwest = "0.9.8"
+serde = { version = "1.0.85", features = ["derive"] }
