@@ -1,5 +1,5 @@
 [package]
-name = "pushover"
+name = "pshovr"
 version = "0.1.0"
 authors = ["Richo Healey <richo@psych0tik.net>"]
 edition = "2018"
@@ -8,3 +8,7 @@ edition = "2018"
 failure = "0.1.5"
 reqwest = "0.9.8"
 serde = { version = "1.0.85", features = ["derive"] }
+redacted_debug = "0.1.0"
+
+[dev-dependencies]
+serde_json = "1.0.38"
