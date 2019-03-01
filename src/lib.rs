@@ -7,14 +7,15 @@ use serde::{Serialize, Serializer};
 static MESSAGE_API_URL: &'static str = "https://api.pushover.net/1/messages.json";
 
 #[derive(Debug)]
+/// The notification with which the notification will be sent.
 pub enum Priority {
-    /// generate no notification/alert
+    /// generate no notification/alert.
     NoNotification,
-    /// always send as a quiet notification
+    /// always send as a quiet notification.
     QuietNotification,
-    /// display as high-priority and bypass the user's quiet hours
+    /// display as high-priority and bypass the user's quiet hours.
     HighPriority,
-    /// to also require confirmation from the user
+    /// to also require confirmation from the user.
     RequireConfirmation,
 }
 
@@ -51,7 +52,8 @@ pub struct Notification<'a> {
 }
 
 macro_rules! setter {
-    ($field:ident, $ty:ty) => {
+    ($field:ident, $ty:ty, $doc:expr) => {
+        #[doc = $doc]
         pub fn $field(mut self, $field: $ty) -> Notification<'a> {
             self.$field = Some($field);
             self
@@ -60,23 +62,10 @@ macro_rules! setter {
 }
 
 impl<'a> Notification<'a> {
-    pub fn send(self) -> Result<reqwest::Response, Error> {
-        let client = reqwest::Client::new();
-        client
-            .post(MESSAGE_API_URL)
-            .form(&self)
-            .send()
-            .map_err(|e| format_err!("HTTP error: {:?}", e))
-    }
-
-    /// your message's title, otherwise your app's name is used
-    setter!(title, String);
-    /// a supplementary URL to show with your message
-    setter!(url, String);
-    /// a title for your supplementary URL, otherwise just the URL is shown
-    setter!(url_title, String);
-    /// The notification priority for this message
-    setter!(priority, Priority);
+    setter!(title, String, "your message's title, otherwise your app's name is used");
+    setter!(url, String, "a supplementary URL to show with your message");
+    setter!(url_title, String, "a title for your supplementary URL, otherwise just the URL is shown");
+    setter!(priority, Priority, "The notification priority for this message");
 }
 
 #[derive(RedactedDebug)]
