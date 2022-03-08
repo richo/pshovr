@@ -6,6 +6,11 @@ use serde::{Serialize, Serializer};
 
 static MESSAGE_API_URL: &'static str = "https://api.pushover.net/1/messages.json";
 
+#[cfg(feature = "async")]
+type Client = reqwest::Client;
+#[cfg(not(feature = "async"))]
+type Client = reqwest::blocking::Client;
+
 #[derive(Debug)]
 /// The notification with which the notification will be sent.
 pub enum Priority {
@@ -72,11 +77,14 @@ impl<'a> Notification<'a> {
 pub struct PushoverClient {
     #[redacted]
     token: String,
-    client: reqwest::blocking::Client,
+    client: Client,
 }
 
 impl PushoverClient {
     pub fn new(token: String) -> PushoverClient {
+        #[cfg(feature = "async")]
+        let client = reqwest::Client::new();
+        #[cfg(not(feature = "async"))]
         let client = reqwest::blocking::Client::new();
 
         PushoverClient {
@@ -97,11 +105,22 @@ impl PushoverClient {
         }
     }
 
+#[cfg(not(feature = "async"))]
     pub fn send<'a>(&'a self, notification: &'a Notification<'_>) -> Result<reqwest::blocking::Response, Error> {
         self.client
             .post(MESSAGE_API_URL)
             .form(&notification)
             .send()
+            .map_err(|e| format_err!("HTTP error: {:?}", e))
+    }
+
+#[cfg(feature = "async")]
+    pub async fn send<'a>(&'a self, notification: &'a Notification<'_>) -> Result<reqwest::Response, Error> {
+        self.client
+            .post(MESSAGE_API_URL)
+            .form(&notification)
+            .send()
+            .await
             .map_err(|e| format_err!("HTTP error: {:?}", e))
     }
 }
@@ -112,6 +131,7 @@ mod tests {
     use std::env;
 
     use serde_json;
+    use tokio;
 
     #[test]
     fn test_serialized_priorities_dtrt() {
@@ -140,8 +160,22 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test]
+    #[ignore]
+    #[cfg(feature = "async")]
+    async fn test_sends_notification() -> Result<(), Error> {
+        let pushover = PushoverClient::new(
+            env::var("ARCHIVER_TEST_PUSHOVER_KEY").expect("Didn't provide test key"),
+            );
+        let user_key: String = "redacted".into();
+        let req = pushover.build_notification(&user_key, "hi there");
+        pushover.send(&req).await?;
+        Ok(())
+    }
+
     #[test]
     #[ignore]
+    #[cfg(not(feature = "async"))]
     fn test_sends_notification() -> Result<(), Error> {
         let pushover = PushoverClient::new(
             env::var("ARCHIVER_TEST_PUSHOVER_KEY").expect("Didn't provide test key"),
