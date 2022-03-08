@@ -72,12 +72,12 @@ impl<'a> Notification<'a> {
 pub struct PushoverClient {
     #[redacted]
     token: String,
-    client: reqwest::Client,
+    client: reqwest::blocking::Client,
 }
 
 impl PushoverClient {
     pub fn new(token: String) -> PushoverClient {
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
 
         PushoverClient {
             token,
@@ -97,7 +97,7 @@ impl PushoverClient {
         }
     }
 
-    pub fn send<'a>(&'a self, notification: &'a Notification) -> Result<reqwest::Response, Error> {
+    pub fn send<'a>(&'a self, notification: &'a Notification<'_>) -> Result<reqwest::blocking::Response, Error> {
         self.client
             .post(MESSAGE_API_URL)
             .form(&notification)
