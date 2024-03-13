@@ -61,4 +61,31 @@ mod tests {
         let payload = _get_payload(&args, &mut stdin.as_bytes());
         assert_eq!(payload, Some("hello yes".into()));
     }
+
+    #[test]
+    fn test_uses_stdin() {
+        let args = vec!("psh".into());
+        let mut stdin = "this is the input".to_string();
+
+        let payload = _get_payload(&args, &mut stdin.as_bytes());
+        assert_eq!(payload, Some("this is the input".into()));
+    }
+
+    #[test]
+    fn test_flattens_args() {
+        let args = vec!("psh".into(), "hello".into(), "yes".into(), "!!!".into());
+        let mut stdin = "ignored".to_string();
+
+        let payload = _get_payload(&args, &mut stdin.as_bytes());
+        assert_eq!(payload, Some("hello yes !!!".into()));
+    }
+
+    #[test]
+    fn test_returns_none_with_no_input() {
+        let args = vec!("psh".into());
+        let mut stdin = "".to_string();
+
+        let payload = _get_payload(&args, &mut stdin.as_bytes());
+        assert_eq!(payload, None);
+    }
 }
